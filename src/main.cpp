@@ -1,7 +1,7 @@
 /*
  * FreeRTOS Esercizio 23: cinque filosofi, con gerarchia delle bacchette, N mangiate del filosofo.
  * 
- * Modificare a piacere il numero di mangiate assengnado un differente valore al parametro NUM_CICLI
+ * Modificare a piacere il numero di mangiate assegnando un differente valore al parametro NUM_CICLI
  *
  * Possibile soluzione del problema dei cinque filosofi mediante bacchette con gerarchia (priorità) crescente.
  *
