@@ -1,6 +1,8 @@
 # ESP32_RTOS_23_Esempio_Filosofi_Gerarchia_bacchette
 
-## FreeRTOS Esercizio 23: cinque filosofi, con gerarchia delle bacchette.
+## FreeRTOS Esercizio 23: cinque filosofi, con gerarchia delle bacchette, N mangiate del filosofo.
+
+Modificare a piacere il numero di mangiate assegnando un differente valore al parametro __NUM_CICLI__.
 
 Una possibile soluzione del problema dei cinque filosofi mediante bacchette con gerarchia (priorità) crescente.
 
