@@ -1,5 +1,7 @@
 /*
- * FreeRTOS Esercizio 23: cinque filosofi, con gerarchia delle bacchette.
+ * FreeRTOS Esercizio 23: cinque filosofi, con gerarchia delle bacchette, N mangiate del filosofo.
+ * 
+ * Modificare a piacere il numero di mangiate assengnado un differente valore al parametro NUM_CICLI
  *
  * Possibile soluzione del problema dei cinque filosofi mediante bacchette con gerarchia (priorità) crescente.
  *
@@ -31,6 +33,8 @@
 const uint16_t NUM_TASKS = 5;
 // Dimensione in byte dello stack del task
 const uint16_t TASK_STACK_SIZE = 2048;
+// numero di cicli del filosofo
+const uint16_t NUM_CICLI = 10;
 
 // Variabili Globali *****************************************************************
 // attesa sulla lettura del parametro da parte dei cinque task
@@ -47,10 +51,13 @@ static SemaphoreHandle_t chopstick[NUM_TASKS];
 // il task accetta un parametro in ingresso, il proprio numero d'ordine al tavolo
 void filosofo(void *parameters)
 {
+  // numero di cicli compiuti dal filosofo
+  uint16_t cicli = 0;
+
   // numero d'ordine del filosofo
   int num_ord;
 
-  char buf[50];
+  char buf[100];
   // indice della prima bacchetta
   int idx_1;
   // indice della seconda bacchetta
@@ -78,37 +85,47 @@ void filosofo(void *parameters)
     idx_2 = num_ord;
   }
 
-  // Prende la prima bacchetta
-  xSemaphoreTake(chopstick[idx_1], portMAX_DELAY);
-  sprintf(buf, "Il filosofo %i prende la bacchetta %i", num_ord, idx_1);
-  Serial.println(buf);
+  // il filosofo mangia e pensa un certo numero di volte
+  for(cicli = 0; cicli < NUM_CICLI; cicli++)
+  {
+    // Prende la prima bacchetta
+    xSemaphoreTake(chopstick[idx_1], portMAX_DELAY);
+    sprintf(buf, "Il filosofo %i prende la bacchetta %i", num_ord, idx_1);
+    Serial.println(buf);
 
-  // Introduce un po' di ritardo per dare luogo al deadlock
-  vTaskDelay(pdMS_TO_TICKS(3));
+    // Introduce un po' di ritardo per dare luogo al deadlock
+    vTaskDelay(pdMS_TO_TICKS(3));
 
-  // Prende la seconda bacchetta
-  xSemaphoreTake(chopstick[idx_2], portMAX_DELAY);
-  sprintf(buf, "Il filosofo %i prende la bacchetta %i", num_ord, idx_2);
-  Serial.println(buf);
+    // Prende la seconda bacchetta
+    xSemaphoreTake(chopstick[idx_2], portMAX_DELAY);
+    sprintf(buf, "Il filosofo %i prende la bacchetta %i", num_ord, idx_2);
+    Serial.println(buf);
 
-  // Il filosofo mangia
-  sprintf(buf, "Il filosofo %i sta mangiando", num_ord);
-  Serial.println(buf);
-  vTaskDelay(pdMS_TO_TICKS(100));
+    // Il filosofo mangia
+    sprintf(buf, "Il filosofo %i sta mangiando, ciclo %i", num_ord, cicli);
+    Serial.println(buf);
+    vTaskDelay(pdMS_TO_TICKS(100));
 
-  // Ripone la seconda bacchetta
-  xSemaphoreGive(chopstick[idx_2]);
-  sprintf(buf, "Il filosofo %i ripone la bacchetta %i", num_ord, idx_2);
-  Serial.println(buf);
+    // Ripone la seconda bacchetta
+    xSemaphoreGive(chopstick[idx_2]);
+    sprintf(buf, "Il filosofo %i ripone la bacchetta %i", num_ord, idx_2);
+    Serial.println(buf);
 
-  // Ripone la prima bacchetta
-  xSemaphoreGive(chopstick[idx_1]);
-  sprintf(buf, "Il filosofo %i ripone la bacchetta %i", num_ord, idx_1);
-  Serial.println(buf);
+    // Ripone la prima bacchetta
+    xSemaphoreGive(chopstick[idx_1]);
+    sprintf(buf, "Il filosofo %i ripone la bacchetta %i", num_ord, idx_1);
+    Serial.println(buf);
+
+    // Il filosofo pensa
+    sprintf(buf, "Il filosofo %i pensa", num_ord);
+    Serial.println(buf);
+    vTaskDelay(pdMS_TO_TICKS(200));
+  }
 
   // Notifica il main che questo task è terminato e rimuove se stesso
   xSemaphoreGive(done_sem);
   vTaskDelete(NULL);
+
 }
 
 //************************************************************************************
@@ -117,10 +134,10 @@ void filosofo(void *parameters)
 // configurazione del sistema
 void setup()
 {
-// buffer per creare il nome di ciascun task (filosofo)
+  // buffer per creare il nome di ciascun task (filosofo)
   char task_name[20];
 
-    // Configurazione della seriale
+  // Configurazione della seriale
   Serial.begin(115200);
 
   // breve pausa
@@ -135,12 +152,14 @@ void setup()
   done_sem = xSemaphoreCreateCounting(NUM_TASKS, 0);
 
   // crea l'array delle bacchette
-  for (int i = 0; i < NUM_TASKS; i++) {
+  for (int i = 0; i < NUM_TASKS; i++)
+  {
     chopstick[i] = xSemaphoreCreateMutex();
   }
 
   // Crea e avvia i cinque task filosofi, ciascuno col suo numero d'ordine
-  for (int i = 0; i < NUM_TASKS; i++) {
+  for (int i = 0; i < NUM_TASKS; i++)
+  {
     sprintf(task_name, "Filosofo %i", i);
     xTaskCreatePinnedToCore(filosofo,
                             task_name,
@@ -149,18 +168,18 @@ void setup()
                             1,
                             NULL,
                             APP_CPU_NUM);
-    // attendi che il task abbia acquisito il proprio numero d'ordine                            
+    // attendi che il task abbia acquisito il proprio numero d'ordine
     xSemaphoreTake(bin_sem, portMAX_DELAY);
   }
 
   // Attende la conclusione dei cinque task
-  for (int i = 0; i < NUM_TASKS; i++) {
+  for (int i = 0; i < NUM_TASKS; i++)
+  {
     xSemaphoreTake(done_sem, portMAX_DELAY);
   }
 
   // Messaggio di uscita, compito concluso senza deadlock
   Serial.println("Terminato senza deadlock!");
-
 }
 
 void loop()
